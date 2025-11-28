@@ -10,7 +10,7 @@ interface CourseData {
   about?: string;
   price: number;
   status: CourseStatus;
-  subjectname: string;
+  subjectName: string;
   mentorEmail: string;
   keyPoints: string[];
   personas: string[];
@@ -36,10 +36,10 @@ export async function coursesSeed() {
   const users = await prisma.user.findMany();
 
   for (const course of courses) {
-    const subject = subjects.find((s) => s.name === course.subjectname);
+    const subject = subjects.find((s) => s.name === course.subjectName);
     if (!subject) {
       console.warn(
-        `Subject not found for course: ${course.title}, subject name: ${course.subjectname}`,
+        `Subject not found for course: ${course.title}, subject name: ${course.subjectName}`,
       );
       continue;
     }
@@ -97,7 +97,7 @@ export async function coursesSeed() {
             skipDuplicates: true,
           });
         }
-        if (course.reviews && course.reviews.length < 0) {
+        if (course.reviews && course.reviews.length > 0) {
           for (const review of course.reviews) {
             const student = users.find((u) => u.email === review.studentEmail);
 
