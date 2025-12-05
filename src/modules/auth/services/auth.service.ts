@@ -5,6 +5,9 @@ import { PrismaService } from "src/common/prisma/prisma.service";
 import { LoginDto } from "src/modules/users/dto/login.dto";
 import * as bcrypt from 'bcrypt';
 import { BaseResponse } from "src/common/interface/base-response.interface";
+import { AuthResponseDto } from "../dto/auth-response.dto";
+import { UserRole } from "src/common/enums/user-role.enum";
+import { UsersResponseDto } from "src/modules/users/dto/users-response.dto";
 
 @Injectable()
 export class AuthService {
@@ -33,5 +36,61 @@ export class AuthService {
         }
 
         const { password, ...userWithoutPassword } = user;
+
+        const userDto = this.usersService.transformToDtoWithoutPassword(userWithoutPassword);
+
+        const userWithStats = await this.addUserStatistic(userDto);
+
+        const accessToken = this.jwtTokenService.generateToken(userDto);
+
+        return {
+            message: 'Login successfully',
+            data: {
+                accessToken,
+                user: userWithStats,
+            },
+        }
+    }
+    private async addUserStatistic(userDto: any): Promise<any> {
+        const stats = { ...userDto }
+
+        if (userDto.role.key === UserRole.MENTOR) {
+            const totalCourse = await this.prisma.course.count({
+                where: {
+                    mentorId: userDto.id
+                },
+            });
+            const totalStudentsResult = await this.prisma.course.aggregate({
+                where: {
+                    mentorId: userDto.id
+                },
+                _sum: {
+                    totalStudents: true
+                },
+            });
+
+            stats.totalCourse = totalCourse;
+            stats.totalStudents = totalStudentsResult._sum.totalStudents || 0;
+            stats.totalEnrolledCourses = null;
+        } else if (userDto.role.key === UserRole.STUDENT) {
+            const totalEnrolledCourse = await this.prisma.enrollment.count({
+                where: {
+                    studentId: userDto.id
+                },
+            });
+
+            stats.totalCourse = null;
+            stats.totalStudents = null;
+            stats.totalEnrolledCourses = totalEnrolledCourse;
+        } else {
+            stats.totalCourse = null;
+            stats.totalStudents = null;
+            stats.totalEnrolledCourses = null;
+        }
+        return stats;
+    }
+    async validateUser(userId: number): Promise<UsersResponseDto | null> {
+        const user = await this.usersService.findById(userId);
+        return user;
     }
 }

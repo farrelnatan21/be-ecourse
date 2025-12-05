@@ -60,4 +60,10 @@ export class UsersRepositories {
 
         }
     }
+    async findById(id: number): Promise<UserWithRoleAndPermissions | null> {
+        return this.prisma.user.findUnique({
+            where: { id },
+            include: this.usersInclude,
+        });
+    }
 }

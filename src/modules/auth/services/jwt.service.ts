@@ -3,10 +3,12 @@ import { UsersResponseDto } from "src/modules/users/dto/users-response.dto";
 import { JwtService } from "@nestjs/jwt";
 
 export interface JwtPayload {
-    id: number;
+    sub: number;
     email: string;
     roleKey: string;
     permissions: string[];
+    isActive: boolean;
+    isVerified: boolean;
 }
 
 @Injectable()
@@ -14,10 +16,12 @@ export class JwtTokenService {
     constructor(private readonly jwtService: JwtService) { }
     generateToken(user: UsersResponseDto): string {
         const payload: JwtPayload = {
-            id: user.id,
+            sub: user.id,
             email: user.email,
             roleKey: user.role.key,
             permissions: user.role.permissions.map((p) => p.key),
+            isActive: user.isActive,
+            isVerified: user.isVerified,
         };
         return this.jwtService.sign(payload, {
             expiresIn: "7d",

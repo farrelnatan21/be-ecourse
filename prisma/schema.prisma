@@ -139,8 +139,8 @@ model Course {
   subject         Subject         @relation(fields: [subjectId], references: [id])
   mentor          User            @relation("MentorCourses", fields: [mentorId], references: [id])
   courseImages    CourseImage[]
-  keyPoints       CourseKeyPoint[]
-  personas        CoursePersona[]
+  courseKeyPoints CourseKeyPoint[]
+  coursePersonas        CoursePersona[]
   resources       CourseResource[]
   sections        CourseSection[]
   enrollments     Enrollment[]
