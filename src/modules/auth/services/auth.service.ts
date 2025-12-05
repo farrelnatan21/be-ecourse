@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { UsersService } from "src/modules/users/services/users.service";
 import { JwtTokenService } from "./jwt.service";
 import { PrismaService } from "src/common/prisma/prisma.service";
@@ -8,6 +8,9 @@ import { BaseResponse } from "src/common/interface/base-response.interface";
 import { AuthResponseDto } from "../dto/auth-response.dto";
 import { UserRole } from "src/common/enums/user-role.enum";
 import { UsersResponseDto } from "src/modules/users/dto/users-response.dto";
+import { RegisterDto } from "src/modules/users/dto/register.dto";
+import { CreateUserData, CreateUserProfileData } from "src/modules/users/types/users.types";
+import { Gender } from "@prisma/client";
 
 @Injectable()
 export class AuthService {
@@ -92,5 +95,47 @@ export class AuthService {
     async validateUser(userId: number): Promise<UsersResponseDto | null> {
         const user = await this.usersService.findById(userId);
         return user;
+    }
+    async register(registerDto: RegisterDto): Promise<BaseResponse<AuthResponseDto>> {
+        const isEmailTaken = await this.usersService.isEmailTaken(registerDto.email);
+        if (isEmailTaken) {
+            throw new ConflictException('Email already taken');
+        }
+        const role = await this.prisma.role.findUnique({
+            where: {
+                key: registerDto.role
+            },
+        });
+        if (!role) {
+            throw new NotFoundException('Role not found');
+        }
+        const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+        const userData: CreateUserData = {
+            email: registerDto.email,
+            password: hashedPassword,
+            roleId: role.id,
+            name: registerDto.name,
+            phone: registerDto.phone,
+            isVerified: false,
+        };
+        const profileData: CreateUserProfileData = {
+            gender: registerDto.gender && Object.values(Gender).includes(registerDto.gender as Gender)
+                ? (registerDto.gender as Gender)
+                : undefined,
+            avatar: registerDto.avatar,
+            bio: registerDto.bio,
+            expertise: registerDto.expertise,
+            experienceYears: registerDto.experienceYears,
+            linkedInUrl: registerDto.linkedInUrl,
+            githubUrl: registerDto.githubUrl,
+        };
+        const user = await this.usersService.register(userData, profileData);
+
+        return {
+            message: 'Registration successful',
+            data: {
+                user,
+            },
+        };
     }
 }

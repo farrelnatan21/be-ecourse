@@ -1,5 +1,5 @@
 import { PrismaService } from "src/common/prisma/prisma.service";
-import { UserWithRoleAndPermissions } from "../types/users.types";
+import { CreateUserData, CreateUserProfileData, UserWithRoleAndPermissions } from "../types/users.types";
 import { UsersResponseDto } from "../dto/users-response.dto";
 import { Injectable } from "@nestjs/common";
 
@@ -65,5 +65,17 @@ export class UsersRepositories {
             where: { id },
             include: this.usersInclude,
         });
+    }
+    async createUserWithProfile(userData: CreateUserData, profileData?: CreateUserProfileData): Promise<UserWithRoleAndPermissions> {
+        const user = await this.prisma.user.create({
+            data: {
+                ...userData,
+                userProfile: profileData ? {
+                    create: profileData
+                } : undefined,
+            },
+            include: this.usersInclude,
+        });
+        return user as UserWithRoleAndPermissions;
     }
 }
