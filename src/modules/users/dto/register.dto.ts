@@ -1,19 +1,20 @@
 import { Gender } from "@prisma/client";
 import { VALIDATION_MESSAGE, VALIDATION_REGEX } from "src/common/constants/validation.constant";
-import { REGISTRATION_ROLES } from "src/common/enums/user-role.enum";
-import z, { regex } from "zod";
+import { UserRole, REGISTRATION_ROLES } from "src/common/enums/user-role.enum";
+import z from "zod";
 
 export const RegisterSchema = z.object({
     name: z.string().min(1, 'Name is required').max(255, 'Name is too long'),
     email: z.string().email('invalid email format'),
     password: z
         .string()
-        .min(8, 'Password must be at least 8 characters long').max(255, 'Password is too long')
-        .regex(VALIDATION_REGEX.PASSWORD, 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
-    confirmPassword: z.string(),
+        .min(8, VALIDATION_MESSAGE.PASSWORD)
+        .max(255, 'Password is too long')
+        .regex(VALIDATION_REGEX.PASSWORD, VALIDATION_MESSAGE.PASSWORD),
+    confirmPassword: z.string().min(1, 'Confirm password is required'),
     role: z.enum(REGISTRATION_ROLES),
-    phone: z.string().regex(VALIDATION_REGEX.INDONESIAN_PHONE, VALIDATION_MESSAGE.PASSWORD).optional(),
-    gender: z.enum(Gender).optional(),
+    phone: z.string().regex(VALIDATION_REGEX.INDONESIAN_PHONE, VALIDATION_MESSAGE.INDONESIAN_PHONE).optional(),
+    gender: z.nativeEnum(Gender).optional(),
     avatar: z.string().optional(),
     bio: z.string().max(500, 'Bio is too long').optional(),
     expertise: z.string().max(255, 'Expertise is too long').optional(),
@@ -33,13 +34,13 @@ export class RegisterDto {
     email: string;
     password: string;
     confirmPassword: string;
-    role: string;
-    phone: string;
-    gender: string;
-    avatar: string;
-    bio: string;
-    expertise: string;
-    experienceYears: number;
-    linkedInUrl: string;
-    githubUrl: string;
+    role: UserRole;
+    phone?: string;
+    gender?: Gender;
+    avatar?: string;
+    bio?: string;
+    expertise?: string;
+    experienceYears?: number;
+    linkedInUrl?: string;
+    githubUrl?: string;
 }

@@ -1,7 +1,6 @@
 export const VALIDATION_REGEX = {
     INDONESIAN_PHONE: /^(\+62|62|0)8[1-9]\d{6,8}$/,
-    PASSWORD: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-
+    PASSWORD: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/,
 } as const;
 
 export const VALIDATION_MESSAGE = {

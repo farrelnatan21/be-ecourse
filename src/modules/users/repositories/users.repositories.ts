@@ -53,7 +53,7 @@ export class UsersRepositories {
                 gender: user.userProfile.gender,
                 expertise: user.userProfile.expertise,
                 experienceYears: user.userProfile.experienceYears,
-                linkedInUrl: user.userProfile.linkedinUrl,
+                linkedInUrl: user.userProfile.linkedInUrl,
                 githubUrl: user.userProfile.githubUrl,
             }
                 : null,

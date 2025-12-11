@@ -5,7 +5,7 @@ import { JwtTokenService } from "./services/jwt.service";
 import { UsersService } from "../users/services/users.service";
 import { JwtModule } from "@nestjs/jwt";
 import { UsersRepositories } from "../users/repositories/users.repositories";
-
+import { FileUploadService } from "src/common/services/file-upload.service";
 @Module({
     imports: [
         JwtModule.register({
@@ -16,7 +16,7 @@ import { UsersRepositories } from "../users/repositories/users.repositories";
         }),
     ],
     controllers: [AuthController],
-    providers: [AuthService, JwtTokenService, UsersService, UsersRepositories],
+    providers: [AuthService, JwtTokenService, UsersService, UsersRepositories, FileUploadService],
     exports: [AuthService, JwtTokenService, UsersService, UsersRepositories],
 })
 export class AuthModule { }
