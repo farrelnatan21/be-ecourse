@@ -10,13 +10,18 @@ import { UserRole } from "src/common/enums/user-role.enum";
 import { UsersResponseDto } from "src/modules/users/dto/users-response.dto";
 import { RegisterDto } from "src/modules/users/dto/register.dto";
 import { CreateUserData, CreateUserProfileData } from "src/modules/users/types/users.types";
+import * as crypto from 'crypto';
+import { QueueService } from "src/common/services/queue.service";
+import { timestamp } from "rxjs";
+import { string } from "zod";
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UsersService,
         private readonly jwtTokenService: JwtTokenService,
-        private prisma: PrismaService,
+        private readonly prisma: PrismaService,
+        private readonly queueService: QueueService,
     ) { }
 
     async login(loginDto: LoginDto): Promise<BaseResponse<AuthResponseDto>> {
@@ -132,6 +137,8 @@ export class AuthService {
 
         console.log('About to hash password...');
         const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+
+        const verificationToken = crypto.randomBytes(32).toString('hex');
         console.log('Password hashed successfully');
 
         const userData: CreateUserData = {
@@ -141,6 +148,7 @@ export class AuthService {
             name: registerDto.name,
             phone: registerDto.phone,
             isVerified: false,
+            verificationToken,
         };
 
         console.log('=== USER DATA TO SAVE ===');
@@ -166,6 +174,20 @@ export class AuthService {
 
         console.log('Calling usersService.register...');
         const user = await this.usersService.register(userData, profileData);
+
+        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
+        await this.queueService.addEmailJob({
+            to: user.email,
+            subject: 'verifikasi email hackgrowth',
+            template: 'verification',
+            templateData: {
+                name: user.name,
+                email: user.email,
+                verificationUrl,
+                timestamp: new Date().toISOString(),
+            }
+        })
         console.log('User registered successfully');
 
         console.log('=== USER SAVED RESULT ===');
@@ -184,6 +206,99 @@ export class AuthService {
             data: {
                 user,
             },
+        };
+    }
+
+    async verifyEmail(token: string): Promise<BaseResponse<null>> {
+        const user = await this.prisma.user.findFirst({
+            where: {
+                verificationToken: token
+            },
+        });
+
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        if (user.isVerified) {
+            return {
+                message: 'Email already verified',
+                data: null,
+            };
+        }
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+
+        await this.prisma.user.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                isVerified: true,
+                verificationToken,
+            },
+        });
+
+        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
+        await this.queueService.addEmailJob({
+            to: user.email,
+            subject: 'verifikasi email hackgrowth',
+            template: 'verification',
+            templateData: {
+                name: user.name,
+                email: user.email,
+                verificationUrl,
+                timestamp: new Date().toISOString(),
+            },
+        });
+
+        return {
+            message: 'Email verified successfully',
+            data: null,
+        };
+    }
+    async resendVerificationEmail(email: string): Promise<BaseResponse<null>> {
+        const user = await this.prisma.user.findUnique({
+            where: {
+                email,
+            },
+        });
+        if (!user) {
+            throw new NotFoundException('User not Found');
+        }
+        if (user.isVerified) {
+            return {
+                message: 'Email already verified',
+                data: null,
+            };
+        }
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+
+        await this.prisma.user.update({
+            where: {
+                id: user.id
+            },
+            data: {
+                verificationToken,
+            },
+        });
+        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
+        await this.queueService.addEmailJob({
+            to: user.email,
+            subject: 'verifikasi email hackgrowth',
+            template: 'verification',
+            templateData: {
+                name: user.name,
+                email: user.email,
+                verificationUrl,
+                timestamp: new Date().toISOString(),
+            },
+        });
+
+        return {
+            message: 'Verification email sent successfully',
+            data: null,
         };
     }
 }

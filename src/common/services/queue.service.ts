@@ -12,7 +12,7 @@ export class QueueService {
     async addEmailJob(jobData: EmailJobData, options?: JobOptions): Promise<void> {
         try {
             const JobOptions: JobOptions = {
-                removeOnComplete: true,
+                removeOnComplete: false,
                 removeOnFail: true,
                 attempts: 3,
                 backoff: {

@@ -14,22 +14,21 @@ export class CacheService {
             const value = await this.redisService.getClient().get(key);
             return value ? JSON.parse(value) as T : null;
         } catch (error) {
-            this.logger.error('Failed to get Cache for key ${key}: ${error}');
+            this.logger.error(`Failed to get cache for key ${key}:`, error);
             return null;
         }
     }
     async set<T>(key: string, value: any, ttl?: number): Promise<boolean> {
-
         try {
             const serializedValue = JSON.stringify(value);
             if (ttl) {
-                await this.redisService.getClient().setex(key, ttl, serializedValue);
+                await this.redisService.getClient().set(key, serializedValue, "EX", ttl);
             } else {
                 await this.redisService.getClient().set(key, serializedValue);
             }
             return true;
         } catch (error) {
-            this.logger.error('Failed to set cache for key ${key}:', error);
+            this.logger.error(`Failed to set cache for key ${key}:`, error);
             return false;
         }
     }
@@ -38,22 +37,22 @@ export class CacheService {
             await this.redisService.getClient().del(key);
             return true;
         } catch (error) {
-            this.logger.error('Failed to delete cache for key ${key}:', error);
+            this.logger.error(`Failed to delete cache for key ${key}:`, error);
             return false;
         }
     }
 
     async exists(key: string): Promise<boolean> {
         try {
-            await this.redisService.getClient().exists(key);
+            await this.redisService.getClient().flushall();
             return true;
         } catch (error) {
-            this.logger.error('Failed to check cache for key ${key}:', error);
+            this.logger.error(`Failed to check cache for key ${key}:`, error);
             return false;
         }
     }
 
     generateKey(prefix: string, ...args: (string | number)[]): string {
-        return `${prefix}:${args.join(':')}`;
+        return `${prefix}:${args.join(":")}`;
     }
 }

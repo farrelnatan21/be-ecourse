@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { LoginDto } from "src/modules/users/dto/login.dto";
 import { AuthResponseDto } from "../dto/auth-response.dto";
@@ -7,6 +7,8 @@ import { FileUploadService } from "src/common/services/file-upload.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { RegisterResponseDto } from "src/modules/users/dto/register-response.dto";
 import { RegisterDto } from "src/modules/users/dto/register.dto";
+import { VerifyEmailDto } from "../dto/verify-email.dto";
+import { ResendVerificationDto } from "../dto/resend-verification.dto";
 
 @Controller('auth')
 export class AuthController {
@@ -66,6 +68,20 @@ export class AuthController {
             }
             throw error;
         }
+    }
+
+    @Get('verify-email')
+    async verifyEmail(
+        @Query() query: VerifyEmailDto,
+    ): Promise<BaseResponse<null>> {
+        return this.authService.verifyEmail(query.token);
+    }
+
+    @Post('resend-verification')
+    async resendVerification(
+        @Body() body: ResendVerificationDto,
+    ): Promise<BaseResponse<null>> {
+        return this.authService.resendVerificationEmail(body.email);
     }
 
 

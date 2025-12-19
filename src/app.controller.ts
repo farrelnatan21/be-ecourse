@@ -56,14 +56,14 @@ export class AppController {
     const key = 'test:key';
     const value = { message: 'hello world' };
 
-    await this.cacheService.set(key, value);
+    await this.cacheService.set(key, value, 60)
     const cachedValue = await this.cacheService.get(key);
 
     return {
       message: 'Test cache sent successfully',
       data: {
         cachedValue,
-        keyExists: await this.cacheService.exists(key),
+        keyExists: await this.cacheService.exists(key)
       }
     }
   }
