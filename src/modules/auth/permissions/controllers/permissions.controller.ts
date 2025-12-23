@@ -1,0 +1,18 @@
+import { Controller, Get, UseGuards } from "@nestjs/common";
+import { JwtAuthGuard } from "../../guards/jwt.guard";
+import { PermissionsService } from "../services/permissions.service";
+import { BaseResponse } from "src/common/interface/base-response.interface";
+import { PermissionsResponseDto } from "../dto/permissions-response.dto";
+
+@Controller('permissions')
+@UseGuards(JwtAuthGuard)
+export class PermissionsController {
+    constructor(
+        private readonly permissionsService: PermissionsService,
+    ) { }
+
+    @Get()
+    async findAll(): Promise<BaseResponse<PermissionsResponseDto[]>> {
+        return this.permissionsService.findAll();
+    }
+}

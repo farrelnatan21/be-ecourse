@@ -11,6 +11,7 @@ import { BullModule } from '@nestjs/bull';
 import { QueueModule } from './common/modules/queue.module';
 import { CacheService } from './common/services/cache.service';
 import { RedisService } from './common/services/redis.service';
+import { PermissionsModule } from './modules/auth/permissions/permission.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RedisService } from './common/services/redis.service';
       }),
     }),
     QueueModule,
+    PermissionsModule,
   ],
 
   controllers: [AppController],
